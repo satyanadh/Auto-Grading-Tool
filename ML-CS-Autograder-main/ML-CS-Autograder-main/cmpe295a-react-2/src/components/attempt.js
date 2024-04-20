@@ -8,6 +8,9 @@ import Form from "react-bootstrap/Form";
 import { format } from "date-fns";
 import axios from "axios";
 import { ReactSketchCanvas } from "react-sketch-canvas";
+import { Navbar, Nav} from "react-bootstrap";
+import { FiEdit } from "react-icons/fi";
+import { FiArrowLeftCircle } from 'react-icons/fi';
 
 export default function Attempt() {
   const [submissionTypes, setSubmissionTypes] = useState([]);
@@ -116,6 +119,10 @@ export default function Attempt() {
     });
   };
 
+  const logout = () => {
+    navigate("/");
+  };
+
   const createQuestion = (question, i) => {
     return (
       <Row key={question._id} className={i > 0 ? "mt-5" : ""}>
@@ -174,27 +181,54 @@ export default function Attempt() {
     );
   };
 
-  return (
+  return (  
+    <>
+    <Navbar bg="dark" variant="dark" expand="lg" fixed="top">
+        <Container>
+        <Button 
+          variant="light" 
+          onClick={toAssignmentsQuizzes}
+          style={{
+            backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '-50px', marginRight: '20px',
+          }}
+        >
+          <FiArrowLeftCircle style={{ marginRight: '8px', fontSize: '24px' }} />Back
+        </Button>
+          <Navbar.Brand href="#home" style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: '20px'}}>
+            Learning Management System
+            <div style={{ fontSize: '0.8em', lineHeight: '1' }}>Welcome, {user.firstName} {user.lastName}!</div>
+          </Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="me-auto">
+              {/* Additional nav items can be added here */}
+            </Nav>
+            <Button variant="outline-light" onClick={logout}>Logout</Button>
+          </Navbar.Collapse>
+        </Container>
+    </Navbar>
+
     <Container className="p-5" fluid>
       <Row className="justify-content-center">
         <Col xs={12} sm={10}>
-          <div className="p-5 shadow rounded">
+          <div className="p-5 shadow rounded" style={{
+              backgroundColor: '#f0f0f0', // Light grey background; adjust color as needed
+              borderRadius: '10px', // Adjust this value to control the curve of the edges
+              padding: '20px', // Adjust for internal spacing
+              margin: '20px 0', // Optional: adds space above and below the box
+            }}>
             <div className="text-center">
               <h1>{assignmentQuiz.name}</h1>
               <h4>
-                due {assignmentQuiz.dueDate} | {assignmentQuiz.totalPoints} points
+                Due Date:{assignmentQuiz.dueDate} | {assignmentQuiz.totalPoints} points
               </h4>
-              <Button
-                variant="primary"
-                type="button"
-                onClick={toAssignmentsQuizzes}
-                className="width-200 mt-1"
-              >
-                {assignmentQuiz.type === "assignment" ? "Assignments" : "Quizzes"}
-              </Button>
               <hr className="m-4" />
               {assignmentQuiz.questions.map((question, i) => createQuestion(question, i))}
-              <Button variant="primary" type="button" onClick={submit} className="width-200 mt-5">
+              <Button variant="primary" type="button" onClick={submit} className="width-200 mt-5" style={{
+                          backgroundColor: '#004085', // Dark blue color
+                          fontSize: '15px',
+                          width: '100px',
+                        }}>
                 Submit
               </Button>
             </div>
@@ -202,5 +236,6 @@ export default function Attempt() {
         </Col>
       </Row>
     </Container>
+  </>
   );
 }

@@ -7,6 +7,8 @@ import Button from "react-bootstrap/Button";
 import Image from "react-bootstrap/Image";
 import Form from "react-bootstrap/Form";
 import { Navbar, Nav} from "react-bootstrap";
+import { FiArrowLeftCircle } from 'react-icons/fi';
+import { FiEdit } from "react-icons/fi";
 
 
 export default function GradeSubmission() {
@@ -81,13 +83,16 @@ export default function GradeSubmission() {
               </Row>
               <Row>
                 <Col>
-                <Button
-              onClick={() => toGradeQuestion(question, answer, i)}
-              className="button-ash mt-3" // Apply the ash color class
-              style={{ width: '200px' }} // Maintain the width
-            >
-                    Grade
-                  </Button>
+                  <Button
+                          onClick={() => toGradeQuestion(question, answer, i)}
+                          style={{
+                            backgroundColor: '#004085', // Dark blue color
+                            fontSize: '15px',
+                            width: '100px',
+                          }}
+                        >
+                          <FiEdit className="me-2" />Grade
+                        </Button>
                 </Col>
               </Row>
             </>
@@ -103,15 +108,25 @@ export default function GradeSubmission() {
 
   return (
     <>
-    <Navbar bg="dark" variant="dark" expand="lg" fixed="top">
+      <Navbar bg="dark" variant="dark" expand="lg" fixed="top">
         <Container>
-        <Navbar.Brand style={{ cursor: 'default', fontWeight: 'bold'  }}>
-            <div style={{ fontWeight: 'bold' }}>Learning Management System</div>
+        <Button 
+          variant="light" 
+          onClick={toGradeAssignmentQuiz}
+          style={{
+            backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '-50px', marginRight: '20px',
+          }}
+        >
+          <FiArrowLeftCircle style={{ marginRight: '8px', fontSize: '24px' }} />Back
+        </Button>
+          <Navbar.Brand href="#home" style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: '20px'}}>
+            Learning Management System
             <div style={{ fontSize: '0.8em', lineHeight: '1' }}>Welcome, {user.firstName} {user.lastName}!</div>
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
+              {/* Additional nav items can be added here */}
             </Nav>
             <Button variant="outline-light" onClick={logout}>Logout</Button>
           </Navbar.Collapse>
@@ -123,21 +138,11 @@ export default function GradeSubmission() {
         <Col xs={12} sm={10}>
           <div className="p-5 shadow rounded">
             <div className="text-center">
-              <h1>Grade {assignmentQuiz.name}</h1>
+              <h1>{assignmentQuiz.name}</h1>
               <h4>
                 Submitted: {submission.dateSubmitted} | {submission.score}/
                 {assignmentQuiz.totalPoints} points
               </h4>
-            </div>
-            {/* Align "Submissions" button to the left with ash color */}
-            <div className="text-start mb-3">
-              <Button
-                onClick={toGradeAssignmentQuiz}
-                className="button-ash" // Ensure the button-ash class is defined in your CSS
-                style={{ width: '200px' }}
-              >
-                Back to Submissions
-              </Button>
             </div>
             <hr className="m-4" />
             {assignmentQuiz.questions.map((question, i) => createQuestion(question, i))}

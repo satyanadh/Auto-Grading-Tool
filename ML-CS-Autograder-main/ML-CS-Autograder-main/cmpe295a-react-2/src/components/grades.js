@@ -7,6 +7,10 @@ import Table from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
 import axios from "axios";
 import { Navbar, Nav} from "react-bootstrap";
+import { FiEdit } from "react-icons/fi";
+import { FiArrowLeftCircle } from 'react-icons/fi';
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
 
 export default function Grades() {
   const [assignmentsQuizzes, setAssignmentsQuizzes] = useState([]);
@@ -14,6 +18,8 @@ export default function Grades() {
   const [totalPoints, setTotalPoints] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
+  const percentage = totalPoints > 0 ? (totalScore / totalPoints) * 100 : 0;
+  
 
   useEffect(() => {
     if (location.state === null) {
@@ -111,38 +117,46 @@ export default function Grades() {
   <>
     <Navbar bg="dark" variant="dark" expand="lg" fixed="top">
         <Container>
-        <Navbar.Brand style={{ cursor: 'default', fontWeight: 'bold'  }}>
-            <div style={{ fontWeight: 'bold' }}>Learning Management System</div>
+        <Button 
+          variant="light" 
+          onClick={toCourse}
+          style={{
+            backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '-50px', marginRight: '20px',
+          }}
+        >
+          <FiArrowLeftCircle style={{ marginRight: '8px', fontSize: '24px' }} />Back
+        </Button>
+          <Navbar.Brand href="#home" style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: '20px'}}>
+            Learning Management System
             <div style={{ fontSize: '0.8em', lineHeight: '1' }}>Welcome, {user.firstName} {user.lastName}!</div>
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
+              {/* Additional nav items can be added here */}
             </Nav>
             <Button variant="outline-light" onClick={logout}>Logout</Button>
           </Navbar.Collapse>
         </Container>
-    </Navbar>
+      </Navbar>
 
     <Container className="p-5" fluid>
       <Row className="justify-content-center">
         <Col xs={12} sm={10}>
           <div className="p-5 shadow rounded">
-            {/* "Course" button aligned to the left */}
-            <div className="text-start mb-3">
-              <Button onClick={toCourse} className="button-ash" style={{ width: '200px' }}>
-                Back to Course
-              </Button>
-            </div>
             {/* Content centered */}
-            <div className="text-center">
+            <div className="text-center" style={{
+              backgroundColor: '#f0f0f0', // Light grey background; adjust color as needed
+              borderRadius: '10px', // Adjust this value to control the curve of the edges
+              padding: '20px', // Adjust for internal spacing
+              margin: '20px 0', // Optional: adds space above and below the box
+            }}>
               <h1>
                 {course.name} Grades for {user.firstName} {user.lastName}
               </h1>
             </div>
-            <hr className="m-4" />
-            <Table striped bordered hover>
-              <thead>
+            <Table striped bordered hover style={{ borderRadius: '15px', borderCollapse: 'separate', borderSpacing: '0'}}>
+              <thead style={{ backgroundColor: '#4CAF50', color: 'white' }}>
                 <tr>
                   <th>Name</th>
                   <th>Type</th>
@@ -156,9 +170,28 @@ export default function Grades() {
             </Table>
             {totalPoints > 0 && (
               <h2 className="text-center">
-                Total: {totalScore}/{totalPoints} ({((totalScore / totalPoints) * 100).toFixed(2)}%)
+                Total Grade: {totalScore}/{totalPoints}
               </h2>
             )}
+            <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', // Center horizontally
+                  alignItems: 'center' }}>
+              <div style={{ 
+                    width: 200, 
+                    height: 200 
+                  }}>
+                    <CircularProgressbar
+                        value={percentage}
+                        text={`${percentage.toFixed(2)}%`}
+                        styles={buildStyles({
+                          // Customize the path, text, and background
+                          pathColor: `rgba(62, 152, 199, ${percentage / 100})`,
+                          textColor: '#f88',
+                          trailColor: '#d6d6d6',
+                          backgroundColor: '#3e98c7',
+                        })}
+                    />
+              </div>
+            </div>
           </div>
         </Col>
       </Row>

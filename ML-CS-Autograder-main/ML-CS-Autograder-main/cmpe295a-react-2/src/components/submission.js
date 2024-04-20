@@ -5,7 +5,8 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
 import Image from "react-bootstrap/Image";
-import Form from "react-bootstrap/Form";
+import { Navbar, Nav} from "react-bootstrap";
+import { FiArrowLeftCircle } from 'react-icons/fi';
 
 export default function Submission() {
   const location = useLocation();
@@ -36,6 +37,11 @@ export default function Submission() {
     });
   };
 
+  const logout = () => {
+    navigate("/");
+  };
+
+
   const createQuestion = (question, i) => {
     let finalAnswer = null;
     for (const answer of submission.answers) {
@@ -52,7 +58,7 @@ export default function Submission() {
             {question.points} points)
           </h2>
           <h4>{question.description}</h4>
-          <Form.Control type="text" value={question.funcDef} readOnly={true} />
+          {/* <Form.Control type="text" value={question.funcDef} readOnly={true} /> */}
           {(finalAnswer === null || !("fileURL" in finalAnswer)) && (
             <h5 className="mt-3">No answer</h5>
           )}
@@ -67,30 +73,49 @@ export default function Submission() {
   };
 
   return (
+  <>
+    <Navbar bg="dark" variant="dark" expand="lg" fixed="top">
+        <Container>
+        <Button 
+          variant="light" 
+          onClick={toSubmissions}
+          style={{
+            backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '-50px', marginRight: '20px',
+          }}
+        >
+          <FiArrowLeftCircle style={{ marginRight: '8px', fontSize: '24px' }} />Back
+        </Button>
+          <Navbar.Brand href="#home" style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: '20px'}}>
+            Learning Management System
+            <div style={{ fontSize: '0.8em', lineHeight: '1' }}>Welcome, {user.firstName} {user.lastName}!</div>
+          </Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="me-auto">
+              {/* Additional nav items can be added here */}
+            </Nav>
+            <Button variant="outline-light" onClick={logout}>Logout</Button>
+          </Navbar.Collapse>
+        </Container>
+    </Navbar>
     <Container className="p-5" fluid>
       <Row className="justify-content-center">
         <Col xs={12} sm={10}>
           <div className="p-5 shadow rounded">
-            <div className="text-center">
-              <h1>{assignmentQuiz.name} Submission</h1>
-              <h4>
-                submitted {submission.dateSubmitted} | {submission.score}/
-                {assignmentQuiz.totalPoints} points
-              </h4>
-              <Button
-                variant="primary"
-                type="button"
-                onClick={toSubmissions}
-                className="width-200 mt-1"
-              >
-                Submissions
-              </Button>
-              <hr className="m-4" />
+           <div className="text-center" style={{
+              backgroundColor: '#f0f0f0', // Light grey background; adjust color as needed
+              borderRadius: '10px', // Adjust this value to control the curve of the edges
+              padding: '20px', // Adjust for internal spacing
+              margin: '20px 0', // Optional: adds space above and below the box
+            }}>
+              <h1 style = {{color : 'green'}}>{assignmentQuiz.name} Submission</h1>
+              <hr style={{ borderWidth: '2px', margin: '20px 0' }}/>
               {assignmentQuiz.questions.map((question, i) => createQuestion(question, i))}
             </div>
           </div>
         </Col>
       </Row>
     </Container>
+  </>
   );
 }

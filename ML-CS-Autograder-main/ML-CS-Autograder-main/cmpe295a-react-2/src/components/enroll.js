@@ -6,6 +6,9 @@ import Col from "react-bootstrap/Col";
 import Table from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
 import axios from "axios";
+import { Navbar, Nav} from "react-bootstrap";
+import { FiArrowLeftCircle } from 'react-icons/fi';
+import { FiEdit } from "react-icons/fi";
 
 export default function Enroll() {
   const [courses, setCourses] = useState([]);
@@ -59,27 +62,55 @@ export default function Enroll() {
       });
   };
 
+  const logout = () => {
+    navigate("/");
+  };
+
+
   return (
+    <>
+    <Navbar bg="dark" variant="dark" expand="lg" fixed="top">
+        <Container>
+        <Button 
+          variant="light" 
+          onClick={toDashboard}
+          style={{
+            backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '-50px', marginRight: '20px',
+          }}
+        >
+          <FiArrowLeftCircle style={{ marginRight: '8px', fontSize: '24px' }} />Back
+        </Button>
+        <Navbar.Brand style={{ cursor: 'default', fontWeight: 'bold', marginLeft: '20px' }}>
+            <div style={{ fontWeight: 'bold' }}>Learning Management System</div>
+            <div style={{ fontSize: '0.8em', lineHeight: '1' }}>Welcome, {user.firstName} {user.lastName}!</div>
+          </Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="me-auto">
+            </Nav>
+            <Button variant="outline-light" onClick={logout}>Logout</Button>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
+
     <Container className="p-5" fluid>
       <Row className="justify-content-center">
         <Col xs={12} sm={10}>
           <div className="p-5 shadow rounded">
-            <div className="text-center">
+          <div className="text-center" style={{
+              backgroundColor: '#f0f0f0', // Light grey background; adjust color as needed
+              borderRadius: '10px', // Adjust this value to control the curve of the edges
+              padding: '20px', // Adjust for internal spacing
+              margin: '20px 0', // Optional: adds space above and below the box
+            }}>
               <h1>Course Enrollment</h1>
-              <Button
-                variant="primary"
-                type="button"
-                onClick={toDashboard}
-                className="width-200 mt-1"
-              >
-                Dashboard
-              </Button>
             </div>
-            <hr className="m-4" />
-            <Table striped bordered hover>
-              <thead>
+            <hr style={{ borderWidth: '2px', margin: '20px 0' }} />
+            <Table striped bordered hover style={{ borderRadius: '15px', borderCollapse: 'separate', borderSpacing: '0'}}>
+              <thead style={{ backgroundColor: '#4CAF50', color: 'white' }}>
                 <tr>
                   <th>Course ID</th>
+                  <th>Course Description</th>
                   <th>Course Name</th>
                   <th>Teacher</th>
                   <th>Enroll</th>
@@ -89,6 +120,7 @@ export default function Enroll() {
                 {courses.map((course) => (
                   <tr key={course._id}>
                     <td>{course._id}</td>
+                    <td>{course.description}</td>
                     <td>{course.name}</td>
                     <td>
                       {course.instructor
@@ -97,16 +129,19 @@ export default function Enroll() {
                     </td>
                     <td>
                       {enrolled.includes(course._id) ? (
-                        <span>Already enrolled</span>
+                        <span style={{ color: 'red' }}>Already enrolled</span>
                       ) : (
                         <Button
-                          variant="primary"
-                          type="button"
-                          onClick={() => enroll(course)}
-                          className="width-100"
-                        >
-                          Enroll
-                        </Button>
+                        className="button-ash"
+                        onClick={() => enroll(course)}
+                        style={{
+                          backgroundColor: '#004085', // Dark blue color
+                          fontSize: '15px',
+                          width: '100px',
+                        }}
+                      >
+                        <FiEdit className="me-2" />Enroll
+                      </Button>
                       )}
                     </td>
                   </tr>
@@ -117,5 +152,6 @@ export default function Enroll() {
         </Col>
       </Row>
     </Container>
+  </>
   );
 }
