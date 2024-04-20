@@ -1,0 +1,23 @@
+.max-height-200 {
+  max-height: 200px;
+}
+
+.height-500 {
+  height: 500px;
+}
+
+.width-100 {
+  width: 100px;
+}
+
+.width-150 {
+  width: 150px;
+}
+
+.width-200 {
+  width: 200px;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
