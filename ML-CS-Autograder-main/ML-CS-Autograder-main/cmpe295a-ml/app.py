@@ -1,13 +1,15 @@
 import os
 import py_compile
 import boto3
+import io
+import sys
 
 import cv2
 import numpy as np
 import requests
 import torch
 from fairseq.models.transformer import TransformerModel
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 from torch import nn
 from PIL import Image, ImageDraw
@@ -499,8 +501,10 @@ def parse():
 def repair():
 
      # Get code from request body
+    
     json = request.get_json()
-    code = json["code"]
+    code = json["parseResult"]
+    funcDef= json["funcDef"]
     print("BEFORE:")
     print(code)
 
@@ -521,16 +525,17 @@ def repair():
 
     # Define prompts for generating content
     repair_prompt = ChatPromptTemplate.from_template(
-      "correct the indentation of the python code and also correct the errors in the code and give and an feedback on the code in 4 to 5 lines mentioning the errors in teh code {theme}."
+      "correct the indentation of the python code and also correct the errors in the code, and put this logic inside {funcDef} and give and an feedback on the code in 4 to 5 lines mentioning the errors in the code {theme}. No comments inside code. Make sure that feedback is properly commented and mentioned after the code."
    )
 
     # Create LLM Chains for each content type
     repair_prompt_chain = LLMChain(llm=llm, prompt=repair_prompt)
 
     #Generate and display creative content
-    generated_repair_prompt = repair_prompt_chain.run(theme=code)
+    generated_repair_prompt = repair_prompt_chain.run({"theme": code, "funcDef": funcDef})
 
     print(generated_repair_prompt)
+
 
 
     # # Get code from request body
@@ -679,34 +684,44 @@ def grade():
     # Get function definition, code, and test cases from request body
     json = request.get_json()
     func_def = json["funcDef"]
-    code = json["code"]
+    code = json["repairResult"]
     test_cases = json["testCases"]
+    points = json["points"]
 
     # Function definition name
     func_def_name = func_def.split("(")[0]
+    func_name= func_def_name.split(" ")[1]
 
     # Indent the student code
     indented_code = []
     code_lines = code.split("\n")
     for code_line in code_lines:
-        indented_code.append(f"    {code_line}")
+        indented_code.append(f"{code_line}")
     indented_code = "\n".join(indented_code)
 
     # Run code against test cases
     passed = 0
     failed = 0
     results = []
+    total=len(test_cases)
     for i, test_case in enumerate(test_cases):
         inp = test_case["input"]
         out = test_case["output"]
 
-        # Generate test code
-        params = ", ".join([str(x) for x in inp])
+        # Ensure input is parsed as an integer if it's purely numeric
+        try:
+            # Attempt to convert input to integer if possible
+            parsed_inputs = [int(x) if x.isdigit() else x for x in inp.split(",")]
+        except ValueError:
+            # Handle the case where conversion isn't straightforward (e.g., mixed types)
+            parsed_inputs = [x.strip() for x in inp.split(",")]
+
+        # Generate parameters string for function invocation
+        params = ", ".join(map(str, parsed_inputs))
         test_code_lines = [
-            f"def {func_def}:",
             indented_code,
             "try:",
-            f"    res = {func_def_name}({params})",
+            f"    res = {func_name}({params})",
             "except Exception as e:",
             "    err = str(e)",
         ]
@@ -717,16 +732,30 @@ def grade():
         # Execute test code and tally results
         local = {}
         result = {"id": i, "input": inp, "expected": out}
+
+        stdout = io.StringIO()  # Create a StringIO object to capture output
+
         try:
+
+            # Redirect stdout
+            sys.stdout = stdout
+
             # Execute test code
             exec(test_code, {}, local)
+
+            # Restore stdout
+            sys.stdout = sys.__stdout__
+
+            # Store the output from StringIO
+            result["stdout"] = stdout.getvalue()
+            stdout.close()
 
             # Tally results
             if "res" in local:
                 res = local["res"]
                 result["output"] = res
                 result["error"] = None
-                if res == out:
+                if str(res) == str(out):
                     passed += 1
                     result["passed"] = True
                 else:
@@ -739,14 +768,21 @@ def grade():
                 result["error"] = local["err"]
 
         except Exception as e:
+            # Always restore stdout even if an error occurs
+            sys.stdout = sys.__stdout__
+            stdout.close()
+
             failed += 1
             result["error"] = str(e)
         results.append(result)
 
-    response = {"passed": passed, "failed": failed, "results": results}
-    return response
+    # Calculate points based on the number of passed test cases
+    earned_points = (passed // total) * points
+
+    response = {"passed": passed, "failed": failed, "results": results, "earned_points": earned_points}
+    return jsonify(response)
 
 
 if __name__ == "__main__":
     # load_bifi_model()
-    app.run()
+    app.run(debug=True)

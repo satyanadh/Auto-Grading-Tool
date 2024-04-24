@@ -16,6 +16,7 @@ export default function CreateAssignmentQuiz() {
   const [description, setDescription] = useState("");
   const [points, setPoints] = useState(0);
   const [dueDate, setDueDate] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [questions, setQuestions] = useState([
     {
       name: "",
@@ -43,40 +44,70 @@ export default function CreateAssignmentQuiz() {
   const course = location.state.course;
   const type = location.state.type;
 
+  const handleInputChange = (setterFunction, value) => {
+    try {
+      // Automatically detect numbers and convert them, treat everything else as a string
+      const formattedValue = isNaN(value) ? JSON.stringify(value) : JSON.stringify(Number(value));
+      setterFunction(formattedValue);
+    } catch (error) {
+      console.error("Error formatting input:", error);
+      // Fall back to original value in case of error
+      setterFunction(JSON.stringify(value));
+    }
+  };
+
   const createAssignmentQuiz = (e) => {
     e.preventDefault();
-
+  
+    setErrorMessage(""); // Clear any previous error messages at the start
+  
+    const totalQuestionPoints = questions.reduce((acc, question) => acc + parseInt(question.points), 0);
+    if (totalQuestionPoints !== parseInt(points)) {
+      setErrorMessage(`Total points of questions (${totalQuestionPoints}) must equal the total points for the assignment/quiz (${points}).`);
+      return;
+    }
+  
+    const funcDefRegex = /^def\s+\w+\s*\(([^)]*)\)\s*:/;
     for (const question of questions) {
-      question.points = parseInt(question.points);
-
-      for (const testCase of question.testCases) {
-        testCase.input = JSON.parse(testCase.input);
-        testCase.output = JSON.parse(testCase.output);
+      if (!question.funcDef || !funcDefRegex.test(question.funcDef)) {
+        setErrorMessage(`Function Definition in one or more questions is either empty or does not match the required format ('def func_name(params):').`);
+        return;
       }
     }
-
-    axios
-      .post("http://localhost:3001/api/v1/assgs/", {
+  
+    try {
+      const formattedQuestions = questions.map(question => ({
+        ...question,
+        points: parseInt(question.points),
+        testCases: question.testCases.map(testCase => ({
+          input: JSON.parse(JSON.stringify(testCase.input)),
+          output: JSON.parse(JSON.stringify(testCase.output))
+        }))
+      }));
+  
+      axios.post("http://localhost:3001/api/v1/assgs/", {
         course: course._id,
         type: type,
         name: name,
         description: description,
         dueDate: format(new Date(dueDate), "MM-dd-yyyy"),
         totalPoints: parseInt(points),
-        questions: questions,
-      })
-      .then(function (response) {
+        questions: formattedQuestions,
+      }).then(response => {
         if (response.data.status === true) {
           toAssignmentsQuizzes();
         } else {
-          alert("Assignment creation failed! ");
+          alert("Assignment creation failed!");
         }
-      })
-      .catch(function (error) {
+      }).catch(error => {
         console.log(error);
+        setErrorMessage("Error submitting assignment.");
       });
+    } catch (error) {
+      console.error("JSON parsing error in test cases:", error);
+      setErrorMessage("Invalid JSON format in test cases. Please check and correct.");
+    }
   };
-
   const addQuestion = () => {
     questions.push({
       name: "",
@@ -273,6 +304,9 @@ export default function CreateAssignmentQuiz() {
                     </Form.Group>
                     <Form.Group className="mt-3">
                       <Form.Label className="fw-bold">Function Definition</Form.Label>
+                      <Form.Text className="text-muted">
+                        Please enter the function definition in the format: "def func_name(params):"
+                      </Form.Text>
                       <Form.Control
                         as="textarea"
                         value={question.funcDef}
@@ -284,6 +318,7 @@ export default function CreateAssignmentQuiz() {
                           borderWidth: '1px', // Thicker border
                           fontSize: '16px', // Larger text size inside the input
                         }}
+                        placeholder="def func_name(params):"
                       />
                     </Form.Group>
                     <Form.Group className="mt-3">
@@ -323,14 +358,15 @@ export default function CreateAssignmentQuiz() {
                           <Form.Label className="fw-bold">Input</Form.Label>
                           <Form.Control
                             type="text"
-                            value={testCase.input}
+                            value={testCase.input} // Ensures the displayed value is user-friendly
                             onChange={(e) => setQuestionProperty(testCase, "input", e)}
                             required
+                            placeholder='Enter a value (e.g., 42 or Even or [1,2,3,4,5] )'
                             style={{
-                              height: '50px', // Increase height for a bigger text box
-                              borderColor: 'black', // Example for a noticeable border color
-                              borderWidth: '1px', // Thicker border
-                              fontSize: '16px', // Larger text size inside the input
+                              height: '50px',
+                              borderColor: 'black',
+                              borderWidth: '1px',
+                              fontSize: '16px',
                             }}
                           />
                         </Form.Group>
@@ -338,14 +374,15 @@ export default function CreateAssignmentQuiz() {
                           <Form.Label className="fw-bold">Output</Form.Label>
                           <Form.Control
                             type="text"
-                            value={testCase.output}
+                            value={testCase.output} // Ensures the displayed value is user-friendly
                             onChange={(e) => setQuestionProperty(testCase, "output", e)}
                             required
+                            placeholder='Enter expected output (e.g., Even)'
                             style={{
-                              height: '50px', // Increase height for a bigger text box
-                              borderColor: 'black', // Example for a noticeable border color
-                              borderWidth: '1px', // Thicker border
-                              fontSize: '16px', // Larger text size inside the input
+                              height: '50px',
+                              borderColor: 'black',
+                              borderWidth: '1px',
+                              fontSize: '16px',
                             }}
                           />
                         </Form.Group>
@@ -411,6 +448,7 @@ export default function CreateAssignmentQuiz() {
                 >
                   Create
                 </Button>
+                {errorMessage && <div style={{ color: 'red', marginTop: '10px' }}>{errorMessage}</div>}
               </div>
             </Form>
           </div>

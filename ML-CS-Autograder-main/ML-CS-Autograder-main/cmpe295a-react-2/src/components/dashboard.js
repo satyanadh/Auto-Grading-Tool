@@ -5,7 +5,7 @@ import books from "../images/books.jpg";
 import { FiEdit } from "react-icons/fi";
 import axios from "axios";
 import backgroundImage from '../images/LMS.jpg'; 
-import gradeCard from '../images/GradesCard.jpg'
+import gradeCard from '../images/GradesCard.jpg';
 
 
 export default function Dashboard() {

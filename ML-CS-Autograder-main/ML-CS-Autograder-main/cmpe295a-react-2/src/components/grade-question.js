@@ -80,7 +80,10 @@ export default function GradeQuestion() {
   const repair = async () => {
     setIsRepairing(true); // Start loading
     try {
-        const response = await axios.post("http://localhost:5000/repair", { code: code });
+        const response = await axios.post("http://localhost:5000/repair", { 
+          funcDef: question.funcDef,
+          parseResult: parseResult 
+        });
         setRepairResult(response.data);
     } catch (error) {
         console.log(error);
@@ -94,16 +97,45 @@ export default function GradeQuestion() {
     try {
         const response = await axios.post("http://localhost:5000/grade", {
             funcDef: question.funcDef,
-            code: code,
+            repairResult: repairResult,
             testCases: question.testCases,
+            points: question.points
         });
-        setResults(response.data);
+        if (response.data) {
+          setResults(response.data);
+          // Calculate points based on test case results
+          const earnedPoints = (response.data.passed / (response.data.passed + response.data.failed)) * question.points;
+          setPoints(earnedPoints);  // Automatically update points based on the grading results
+        }
     } catch (error) {
         console.log(error);
     } finally {
         setIsGrading(false); // Stop loading
     }
-};
+  };
+
+  const formatTestCaseResult = (result) => {
+    const { id, input, expected, output, passed, error, stdout } = result;
+
+    // Determine the status and corresponding color
+    const status = passed ? 'Passed' : 'Failed';
+    const color = passed ? 'green' : 'red';
+
+    // Create a symbol based on the status
+    const symbol = passed ? '✔️' : '❌';
+
+    // Format the test case result
+    const testCaseResult = `
+      Test case ${id} : ${status} (${symbol})
+      Input: ${input}
+      Expected Output: ${expected}
+      Actual Output: ${output}
+      Error: ${error || 'None'}
+      Stdout: ${stdout}
+    `;
+
+    return testCaseResult;
+  };
 
   const toGradeSubmission = () => {
     navigate(`/grade-submission`, {
@@ -192,7 +224,7 @@ export default function GradeQuestion() {
                     onChange={(e) => setParseResult(e.target.value)}
                     placeholder="Parse results will appear here..."
                     className="mt-3 bold-box"
-                    readOnly={!isParsing}
+                    // readOnly={!isParsing}
                   />
                 </Col>
                 <Col md={6}>
@@ -216,7 +248,7 @@ export default function GradeQuestion() {
                     onChange={(e) => setRepairResult(e.target.value)}
                     placeholder="Repair results will appear here..."
                     className="mt-3 bold-box"
-                    readOnly={!isRepairing}
+                    // readOnly={!isRepairing}
                   />
             </Col>
         </Row>
@@ -239,14 +271,7 @@ export default function GradeQuestion() {
             </Button>
           </Col>
         </Row>
-        <Form.Control
-          as="textarea"
-          rows={15}
-          className="mt-3 bold-box"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-        />
-        {results !== null && (
+        {results !== null && Array.isArray(results.results) && (
           <div className="mt-3">
             <h3>
               Test Cases Passed: {results.passed} ({((results.passed / (results.passed + results.failed)) * 100).toFixed(2)}%)
@@ -258,7 +283,7 @@ export default function GradeQuestion() {
               as="textarea"
               rows={5}
               className="mt-3 bold-box"
-              value={JSON.stringify(results)}
+              value={results.results.map(formatTestCaseResult).join('\n')}
               readOnly={true}
             />
           </div>

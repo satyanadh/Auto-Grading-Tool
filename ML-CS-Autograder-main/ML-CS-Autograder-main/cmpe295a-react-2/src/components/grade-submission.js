@@ -70,7 +70,11 @@ export default function GradeSubmission() {
             points)
           </h2>
           <h4>{question.description}</h4>
-          <Form.Control type="text" value={question.funcDef} readOnly={true} />
+          <Form.Control 
+            type="text" 
+            value={question.funcDef}
+            // readOnly={true}  
+          />
           {(answer === null || !("fileURL" in answer)) && <h5 className="mt-3">No answer</h5>}
           {answer !== null && (
             <>
