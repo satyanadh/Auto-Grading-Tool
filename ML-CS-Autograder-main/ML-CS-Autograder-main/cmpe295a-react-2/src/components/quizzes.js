@@ -7,6 +7,9 @@ import Table from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
 import axios from "axios";
 import { Navbar, Nav} from "react-bootstrap";
+import { FiEdit } from "react-icons/fi";
+import { FiArrowLeftCircle } from 'react-icons/fi';
+
 
 export default function Quizzes() {
   const [quizzes, setQuizzes] = useState([]);
@@ -74,7 +77,7 @@ export default function Quizzes() {
   };
 
   const toGradeAssignmentQuiz = (quiz) => {
-    navigate("/grade-assignment-quiz", {
+    navigate("/grade", {
       state: {
         user: user,
         course: course,
@@ -91,50 +94,63 @@ export default function Quizzes() {
     <>
     <Navbar bg="dark" variant="dark" expand="lg" fixed="top">
         <Container>
-        <Navbar.Brand style={{ cursor: 'default', fontWeight: 'bold'  }}>
-            <div style={{ fontWeight: 'bold' }}>Learning Management System</div>
+        <Button 
+          variant="light" 
+          onClick={toCourse}
+          style={{
+            backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '-50px', marginRight: '20px',
+          }}
+        >
+          <FiArrowLeftCircle style={{ marginRight: '8px', fontSize: '24px' }} />Back
+        </Button>
+          <Navbar.Brand href="#home" style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: '20px'}}>
+            Learning Management System
             <div style={{ fontSize: '0.8em', lineHeight: '1' }}>Welcome, {user.firstName} {user.lastName}!</div>
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
+              {/* Additional nav items can be added here */}
             </Nav>
             <Button variant="outline-light" onClick={logout}>Logout</Button>
           </Navbar.Collapse>
         </Container>
-    </Navbar>
+      </Navbar>
 
     <Container className="p-5" fluid>
   <Row className="justify-content-center">
     <Col xs={12} sm={10}>
       <div className="p-5 shadow rounded">
         {/* Align "Course" button to the left */}
-        <div className="text-start mb-3">
-          <Button
-            onClick={toCourse}
-            className="button-ash" // Apply the ash color class
-            style={{ width: '200px' }} // Maintain the width
-          >
-            Back to Course
-          </Button>
-        </div>
         <div className="text-center">
+        <div className="text-center" style={{
+              backgroundColor: '#f0f0f0', // Light grey background; adjust color as needed
+              borderRadius: '10px', // Adjust this value to control the curve of the edges
+              padding: '20px', // Adjust for internal spacing
+              margin: '20px 0', // Optional: adds space above and below the box
+            }}>
           <h1>{course.name} Quizzes</h1>
+         </div>
         </div>
-        <hr className="m-4" />
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
         {user.role === "teacher" && (
           <div className="text-center mb-3">
             <Button
               onClick={createQuiz}
               className="button-ash" // Apply the ash color class
-              style={{ width: '200px' }} // Maintain the width
+              style={{
+                backgroundColor: '#004085', // Dark blue color
+                fontSize: '15px',
+              }}
             >
-              Create/Add Quiz
+              <FiEdit className="me-2" /> Create/Add Quiz
             </Button>
           </div>
         )}
-        <Table striped bordered hover>
-          <thead>
+        </div>
+        <hr style={{ borderWidth: '2px', margin: '20px 0' }} />
+        <Table striped bordered hover style={{ borderRadius: '15px', borderCollapse: 'separate', borderSpacing: '0'}}>
+          <thead style={{ backgroundColor: '#4CAF50', color: 'white' }}>
             <tr>
               <th>Quiz</th>
               <th>Due Date</th>
@@ -150,7 +166,34 @@ export default function Quizzes() {
                 <td>{new Date(quiz.dueDate).toLocaleDateString()}</td>
                 <td>{quiz.totalPoints}</td>
                 <td>
-                  {/* Apply the ash color class to these buttons as well */}
+                      {user.role === "student" ? (
+                        <>
+                          <Button
+                            className="button-ash me-2"
+                            onClick={() => toAttempt(quiz)}
+                          >
+                            Attempt
+                          </Button>
+                          <Button
+                            className="button-ash"
+                            onClick={() => toSubmissions(quiz)}
+                          >
+                            Submissions
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          className="button-ash"
+                          onClick={() => toGradeAssignmentQuiz(quiz)}
+                          style={{
+                            backgroundColor: '#004085', // Dark blue color
+                            fontSize: '15px',
+                            width: '100px',
+                          }}
+                        >
+                          <FiEdit className="me-2" />Grade
+                        </Button>
+                      )}
                 </td>
               </tr>
             ))}

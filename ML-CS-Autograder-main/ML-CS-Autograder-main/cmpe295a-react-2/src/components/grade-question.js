@@ -8,6 +8,9 @@ import Image from "react-bootstrap/Image";
 import Form from "react-bootstrap/Form";
 import axios from "axios";
 import { Navbar, Nav} from "react-bootstrap";
+import { FiArrowLeftCircle, FiArrowRightCircle } from 'react-icons/fi';
+import { Spinner } from 'react-bootstrap';
+
 
 export default function GradeQuestion() {
   const [points, setPoints] = useState(0);
@@ -15,6 +18,12 @@ export default function GradeQuestion() {
   const [results, setResults] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const [isParsing, setIsParsing] = useState(false);
+  const [isRepairing, setIsRepairing] = useState(false);
+  const [isGrading, setIsGrading] = useState(false);
+  const [parseResult, setParseResult] = useState('');
+  const [repairResult, setRepairResult] = useState('');
+
 
   useEffect(() => {
     if (location.state === null) {
@@ -56,45 +65,76 @@ export default function GradeQuestion() {
       });
   };
 
-  const parse = () => {
-    axios
-      .post("http://localhost:5000/parse", {
-        url: answer.fileURL,
-      })
-      .then(function (response) {
-        setCode(response.data);
-      })
-      .catch(function (e) {
-        console.log(e);
-      });
+  const parse = async () => {
+    setIsParsing(true); // Start loading
+    try {
+        const response = await axios.post("http://localhost:5000/parse", { url: answer.fileURL });
+        setParseResult(response.data);
+    } catch (error) {
+        console.log(error);
+    } finally {
+        setIsParsing(false); // Stop loading
+    }
   };
 
-  const repair = () => {
-    axios
-      .post("http://localhost:5000/repair", {
-        code: code,
-      })
-      .then(function (response) {
-        setCode(response.data);
-      })
-      .catch(function (e) {
-        console.log(e);
-      });
+  const repair = async () => {
+    setIsRepairing(true); // Start loading
+    try {
+        const response = await axios.post("http://localhost:5000/repair", { 
+          funcDef: question.funcDef,
+          parseResult: parseResult 
+        });
+        setRepairResult(response.data);
+    } catch (error) {
+        console.log(error);
+    } finally {
+        setIsRepairing(false); // Stop loading
+    }
   };
 
-  const grade = () => {
-    axios
-      .post("http://localhost:5000/grade", {
-        funcDef: question.funcDef,
-        code: code,
-        testCases: question.testCases,
-      })
-      .then(function (response) {
-        setResults(response.data);
-      })
-      .catch(function (e) {
-        console.log(e);
-      });
+  const grade = async () => {
+    setIsGrading(true); // Start loading
+    try {
+        const response = await axios.post("http://localhost:5000/grade", {
+            funcDef: question.funcDef,
+            repairResult: repairResult,
+            testCases: question.testCases,
+            points: question.points
+        });
+        if (response.data) {
+          setResults(response.data);
+          // Calculate points based on test case results
+          const earnedPoints = (response.data.passed / (response.data.passed + response.data.failed)) * question.points;
+          setPoints(earnedPoints);  // Automatically update points based on the grading results
+        }
+    } catch (error) {
+        console.log(error);
+    } finally {
+        setIsGrading(false); // Stop loading
+    }
+  };
+
+  const formatTestCaseResult = (result) => {
+    const { id, input, expected, output, passed, error, stdout } = result;
+
+    // Determine the status and corresponding color
+    const status = passed ? 'Passed' : 'Failed';
+    const color = passed ? 'green' : 'red';
+
+    // Create a symbol based on the status
+    const symbol = passed ? '✔️' : '❌';
+
+    // Format the test case result
+    const testCaseResult = `
+      Test case ${id} : ${status} (${symbol})
+      Input: ${input}
+      Expected Output: ${expected}
+      Actual Output: ${output}
+      Error: ${error || 'None'}
+      Stdout: ${stdout}
+    `;
+
+    return testCaseResult;
   };
 
   const toGradeSubmission = () => {
@@ -114,15 +154,25 @@ export default function GradeQuestion() {
 
   return (
     <>
-    <Navbar bg="dark" variant="dark" expand="lg" fixed="top">
+      <Navbar bg="dark" variant="dark" expand="lg" fixed="top">
         <Container>
-        <Navbar.Brand style={{ cursor: 'default', fontWeight: 'bold'  }}>
-            <div style={{ fontWeight: 'bold' }}>Learning Management System</div>
+        <Button 
+          variant="light" 
+          onClick={toGradeSubmission}
+          style={{
+            backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '-50px', marginRight: '20px',
+          }}
+        >
+          <FiArrowLeftCircle style={{ marginRight: '8px', fontSize: '24px' }} />Back
+        </Button>
+          <Navbar.Brand href="#home" style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: '20px'}}>
+            Learning Management System
             <div style={{ fontSize: '0.8em', lineHeight: '1' }}>Welcome, {user.firstName} {user.lastName}!</div>
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
+              {/* Additional nav items can be added here */}
             </Nav>
             <Button variant="outline-light" onClick={logout}>Logout</Button>
           </Navbar.Collapse>
@@ -133,56 +183,95 @@ export default function GradeQuestion() {
   <Row className="justify-content-center">
     <Col xs={12} sm={10}>
       <div className="p-5 shadow rounded">
-        {/* Align "Back to Grade Submission" button to the left */}
-        <div className="text-start mb-3">
-          <Button
-            type="button"
-            onClick={toGradeSubmission}
-            className="button-ash width-200 mt-1"
-          >
-            Back to Grade Submission
-          </Button>
-        </div>
-        <hr className="m-4" />
         <div className="text-center">
           <h2>
             {i + 1}. {question.name} ({answer.points}/{question.points} points)
           </h2>
           <h4>{question.description}</h4>
           <Form.Control type="text" value={question.funcDef} readOnly={true} />
+          <h2 style={{ color: 'green' }}>Submission</h2>
           {answer.fileURL && (
-            <a href={answer.fileURL}>
-              <Image src={answer.fileURL} className="max-height-200 mt-3" rounded fluid />
-            </a>
+            <div className="mt-3 p-3 shadow rounded bg-light" style={{ maxWidth: 'fit-content', margin: 'auto' }}>
+              <a href={answer.fileURL} target="_blank" rel="noopener noreferrer">
+                <Image src={answer.fileURL} className="max-height-200 rounded" fluid />
+              </a>
+            </div>
           )}
         </div>
-        <hr className="m-4" />
-        <h2 className="text-center">Automated Grading</h2>
+        <h2 className="text-center" style={{ marginTop: '20px' }}>Automated Grading</h2>
+        <Row className="justify-content-center align-items-start">
+                <Col md={6}>
+                <Button type="button" className="button-ash width-200 mt-1" onClick={parse}
+                  style={{
+                    backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '120px', marginRight: '50px',
+                  }}>
+                  {isParsing ? (
+                  <>
+                      <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" style={{ marginRight: '5px' }} />
+                      Parsing...
+                  </>
+                  ) : (
+                  <>
+                      Parse <FiArrowRightCircle style={{ marginRight: '8px', fontSize: '24px' }} />
+                  </>
+                  )}
+                  {/* Parse <FiArrowRightCircle style={{ marginRight: '8px', fontSize: '24px' }} /> */}
+                 </Button>
+                  <Form.Control
+                    as="textarea"
+                    rows={20}
+                    value={parseResult}
+                    onChange={(e) => setParseResult(e.target.value)}
+                    placeholder="Parse results will appear here..."
+                    className="mt-3 bold-box"
+                    // readOnly={!isParsing}
+                  />
+                </Col>
+                <Col md={6}>
+                <Button type="button" className="button-ash width-200 mt-1" onClick={repair}
+                  style={{ backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '120px', marginRight: '50px',}}>
+                  {isRepairing ? (
+                  <>
+                      <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" style={{ marginRight: '5px' }} />
+                      Repairing...
+                  </>
+                  ) : (
+                  <>
+                      Repair <FiArrowRightCircle style={{ marginRight: '8px', fontSize: '24px' }} />
+                  </>
+                  )}
+                </Button>
+                  <Form.Control
+                    as="textarea"
+                    rows={20}
+                    value={repairResult}
+                    onChange={(e) => setRepairResult(e.target.value)}
+                    placeholder="Repair results will appear here..."
+                    className="mt-3 bold-box"
+                    // readOnly={!isRepairing}
+                  />
+            </Col>
+        </Row>
         <Row className="justify-content-center">
-          <Col xs="auto">
-            <Button type="button" className="button-ash width-200 mt-1" onClick={parse}>
-              Parse
-            </Button>
-          </Col>
-          <Col xs="auto">
-            <Button type="button" className="button-ash width-200 mt-1" onClick={repair}>
-              Repair
-            </Button>
-          </Col>
-          <Col xs="auto">
-            <Button type="button" className="button-ash width-200 mt-1" onClick={grade}>
-              Grade
+        <Col xs="auto">
+            <Button type="button" className="button-ash width-200 mt-3" onClick={grade}
+            style={{
+              backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '-10px', marginRight: '20px',
+            }}>
+              {isGrading ? (
+            <>
+                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" style={{ marginRight: '5px' }} />
+                Grading...
+            </>
+            ) : (
+            <>
+                Grade <FiArrowRightCircle style={{ marginRight: '8px', fontSize: '24px' }} />
+            </>
+            )}
             </Button>
           </Col>
         </Row>
-        <Form.Control
-          as="textarea"
-          rows={5}
-          className="mt-3 bold-box"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-        />
-        {results !== null && (
+        {results !== null && Array.isArray(results.results) && (
           <div className="mt-3">
             <h3>
               Test Cases Passed: {results.passed} ({((results.passed / (results.passed + results.failed)) * 100).toFixed(2)}%)
@@ -194,7 +283,7 @@ export default function GradeQuestion() {
               as="textarea"
               rows={5}
               className="mt-3 bold-box"
-              value={JSON.stringify(results)}
+              value={results.results.map(formatTestCaseResult).join('\n')}
               readOnly={true}
             />
           </div>
@@ -214,7 +303,12 @@ export default function GradeQuestion() {
               className="points-input" 
             />
           </Form.Group>
-          <Button type="submit" className="button-ash width-200 mt-1">
+          <Button type="submit" className="button-ash width-200 mt-1"
+          style={{
+            backgroundColor: '#004085', // Dark blue color
+            fontSize: '15px',
+            width: '150px'
+          }}>
             Save
           </Button>
         </Form>

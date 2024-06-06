@@ -5,6 +5,7 @@ import books from "../images/books.jpg";
 import { FiEdit } from "react-icons/fi";
 import axios from "axios";
 import backgroundImage from '../images/LMS.jpg'; 
+import gradeCard from '../images/GradesCard.jpg';
 
 
 export default function Dashboard() {
@@ -17,6 +18,11 @@ export default function Dashboard() {
     top: '100px', // Adjust this value based on your navbar's height
     right: '20px', // Right-aligned with some margin
     zIndex: '1000', // Ensure it's above other content
+    color: 'white', // Text color
+    padding: '10px 20px', // Padding around the text
+    borderRadius: '5px', // Rounded corners
+    border: 'none', // Remove border
+    cursor: 'pointer', // Change cursor on hover
   };
 
   useEffect(() => {
@@ -72,12 +78,7 @@ export default function Dashboard() {
             <Nav className="me-auto">
               {/* Optionally, other navigation links can be added here */}
             </Nav>
-            <Button 
-              variant="outline-primary" 
-              onClick={logout} 
-              style={{ color: 'white', borderColor: 'white' }}>
-              Logout
-            </Button>
+            <Button variant="outline-light" onClick={logout}>Logout</Button>
           </Navbar.Collapse>
         </Container>
       </Navbar>
@@ -87,6 +88,13 @@ export default function Dashboard() {
           <Button variant="secondary" onClick={createCourse}>
             <FiEdit className="me-2" />Add a New Course
           </Button>
+        </div>
+      )}
+      {user.role === "student" && (
+        <div style={addCourseButtonStyle}>
+            <Button variant="secondary" type="button" onClick={enroll}>
+              <FiEdit className="me-2" /> Enroll New Course
+            </Button>
         </div>
       )}
       
@@ -103,7 +111,7 @@ export default function Dashboard() {
                       className="cursor-pointer h-100"
                       style={{ backgroundColor: 'green', color: 'white' }}
                     >
-                      <Card.Img variant="top" src={books} />
+                      <Card.Img variant="top" src={gradeCard} />
                       <Card.Body>
                         <Card.Title className="text-center mb-0" style={{ fontWeight: 'bold' }}>
                           {course.name}

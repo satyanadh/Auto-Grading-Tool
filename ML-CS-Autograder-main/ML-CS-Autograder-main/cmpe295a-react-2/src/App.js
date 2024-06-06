@@ -17,6 +17,7 @@ import GradeAssignmentQuiz from "./components/grade-assignment-quiz";
 import GradeSubmission from "./components/grade-submission";
 import GradeQuestion from "./components/grade-question";
 import NotFound from "./components/not-found";
+import CodeEditor from "./components/code-editor";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
         <Route path="/grade-submission" element={<GradeSubmission />} />
         <Route path="/grade-question" element={<GradeQuestion />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="/code-editor" element={<CodeEditor />} />
       </Routes>
     </BrowserRouter>
   );

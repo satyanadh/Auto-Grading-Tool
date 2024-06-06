@@ -17,6 +17,8 @@ export default function Register() {
   const [role, setRole] = useState("student");
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+  const [alertVariant, setAlertVariant] = useState('danger'); // default to 'danger'
+
 
   const register = (e) => {
     e.preventDefault();
@@ -32,8 +34,13 @@ export default function Register() {
       })
       .then(function (response) {
         if (response.data.status === true) {
-          setMessage("");
+          setMessage("User Registered Successfully");
+          setAlertVariant('success');
           navigate("/");
+          window.close();
+          <Alert variant="success" className="mt-3 mb-0">
+            User Registered Succesfully
+          </Alert>
         } else {
           setMessage("Username or email already taken.");
         }
@@ -124,7 +131,7 @@ export default function Register() {
                 </h5>
               </div>
               {message !== "" && (
-                <Alert variant="danger" className="mt-3 mb-0">
+                <Alert variant={alertVariant} className="mt-3 mb-0">
                   {message}
                 </Alert>
               )}
