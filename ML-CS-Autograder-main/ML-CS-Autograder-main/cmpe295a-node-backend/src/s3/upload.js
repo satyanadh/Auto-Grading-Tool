@@ -8,8 +8,6 @@ const s3 = new aws.S3({
     // accessKeyId: process.env.S3_ACCESS_KEY,
     // secretAccessKey: process.env.S3_SECRET_KEY,
     // region: process.env.S3_BUCKET_REGION,
-    accessKeyId: "AKIARPSPOJU3P7MI5V5C",
-    secretAccessKey: "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",
     region: "us-west-1",
 })
 
