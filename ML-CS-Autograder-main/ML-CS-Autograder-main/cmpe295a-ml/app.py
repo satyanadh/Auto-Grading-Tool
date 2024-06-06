@@ -75,7 +75,7 @@ CLASS_NAMES_MAP = {
     "comma": ",",
 }
 
-client = boto3.client('textract',region_name='us-east-1',aws_access_key_id='AKIARPSPOJU3NC33CWVB',aws_secret_access_key='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')
+client = boto3.client('textract',region_name='us-east-1',aws_access_key_id='',aws_secret_access_key='')
 
 current_date = datetime.datetime.now().date()
 # Define the date after which the model should be set to "gpt-3.5-turbo"
@@ -519,7 +519,7 @@ def repair():
     else:
         llm_model = "gpt-3.5-turbo-0301"
 
-    os.environ["OPENAI_API_KEY"] = "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"
+    os.environ["OPENAI_API_KEY"] = ""
 
     llm = ChatOpenAI(temperature=0.9, model=llm_model)
 
