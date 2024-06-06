@@ -1,14 +1,5 @@
 # A Learning Management System With Automated Grading of Handwritten and Open-Ended Solutions Using Machine Learning
 
-## Project Advisor
-Professor Carlos Rojas, Ph.D.
-
-## Team Members
-- Ryan Tran (ryan.l.tran@sjsu.edu)
-- Parmeet Singh (parmeet.singh@sjsu.edu)
-- Teja Ganapati Jaddipal (teja.ganapatijaddipal@sjsu.edu)
-- Kiranmayee Panigrahi (kiranmayee.panigrahi@sjsu.edu)
-
 ## Local Setup
 There are three main projects:
 1. Node Backend REST APIs: cmpe295a-node-backend
